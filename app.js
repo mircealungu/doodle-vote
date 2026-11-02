@@ -1,7 +1,3 @@
-const GITHUBOwner = 'mircealungu';
-const GITHUB_REPO = 'doodle-vote';
-const GITHUB_TOKEN = 'ghp_pat_11AADRNBY0CsP84p9FhoK1_HunYfpVI8cQpSuTPPest7t7Kp6593zgGFHB05ED2UWURN66CGS6KeP0HXAj';
-
 const hours = [
     '7am', '8am', '9am', '10am',
     '11am', '12pm', '1pm', '2pm',
@@ -39,7 +35,7 @@ class Doodle {
         statuses.innerHTML = '<div class="loading">Loading votes...</div>';
 
         try {
-            const response = await fetch(`https://api.github.com/repos/${GITHUBOwner}/${GITHUB_REPO}/discussions?state=all&direction=desc&per_page=100`);
+            const response = await fetch('https://api.github.com/repos/mircealungu/doodle-vote/discussions?state=all&direction=desc&per_page=100');
             
             if (!response.ok) throw new Error(`API error: ${response.status}`);
 
@@ -80,45 +76,38 @@ class Doodle {
         }
     }
 
-    async handleVote(hour) {
+    handleVote(hour) {
         selectedHour = hour;
-        this.updateButtonStyles();
+        this.showForm();
+    }
 
-        const statuses = document.getElementById('statuses');
-        statuses.innerHTML = '<div class="loading">Submitting vote...</div>';
+    showForm() {
+        const formContainer = document.getElementById('form-container');
+        const formHTML = `
+            <form id="vote-form" action="https://formsubmit.co/mircea.lungu@gmail.com" method="POST">
+                <h3>Submit your vote</h3>
+                <p>Selected hour: <strong>${selectedHour}</strong></p>
+                <input type="hidden" name="hour" value="${selectedHour}">
+                <input type="text" name="name" placeholder="Your name" required>
+                <input type="hidden" name="_autoresponse" value="Thanks for voting!">
+                <button type="submit">Submit Vote</button>
+            </form>
+        `;
+        formContainer.innerHTML = formHTML;
+        formContainer.style.display = 'block';
 
-        try {
-            const response = await fetch(`https://api.github.com/repos/${GITHUBOwner}/${GITHUB_REPO}/discussions`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/vnd.github+json',
-                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    title: `Vote: ${hour}`,
-                    body: `Vote for ${hour}`,
-                    category_id: null
-                })
-            });
+        const form = document.getElementById('vote-form');
+        form.addEventListener('submit', () => {
+            this.hideForm();
+        });
+    }
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to create discussion');
-            }
-
-            await this.loadVotes();
-            alert(`Vote for ${hour} recorded!`);
-        } catch (error) {
-            console.error('Error submitting vote:', error);
-            statuses.innerHTML = `<div class="error">Error submitting vote: ${error.message}</div>`;
-            alert(`Failed to submit vote: ${error.message}`);
-        }
+    hideForm() {
+        document.getElementById('form-container').style.display = 'none';
     }
 
     updateButtonStyles() {
         document.querySelectorAll('.hour-btn').forEach(btn => {
-            btn.classList.remove('selected');
             btn.classList.add('disabled');
         });
     }
