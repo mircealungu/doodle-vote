@@ -5,6 +5,8 @@ const hours = [
     '7pm', '8pm', '9pm', '10pm'
 ];
 
+let selectedHour = null;
+
 class Doodle {
     constructor() {
         this.init();
@@ -75,7 +77,30 @@ class Doodle {
     }
 
     handleVote(hour) {
-        window.location.href = `mailto:?subject=Meeting vote for ${hour}&body=I vote for ${hour}`;
+        selectedHour = hour;
+        this.showForm();
+    }
+
+    showForm() {
+        const formHTML = `
+            <div class="form-container">
+                <h3>Submit your vote</h3>
+                <p>Selected hour: <strong>${selectedHour}</strong></p>
+                <form action="https://formsubmit.co/mircea.lungu@gmail.com" method="POST" id="vote-form">
+                    <input type="hidden" name="_subject" value="New vote for meeting time">
+                    <input type="hidden" name="_next" value="https://mircealungu.github.io/doodle-vote/">
+                    <input type="hidden" name="hour" value="${selectedHour}">
+                    <p>
+                        <label>Your name:<br>
+                            <input type="text" name="name" required>
+                        </label>
+                    </p>
+                    <button type="submit">Submit Vote</button>
+                </form>
+            </div>
+        `;
+        const formContainer = document.getElementById('statuses');
+        formContainer.innerHTML = formHTML;
     }
 }
 
