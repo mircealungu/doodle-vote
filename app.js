@@ -5,6 +5,8 @@ const hours = [
     '7pm', '8pm', '9pm', '10pm'
 ];
 
+const GITHUB_TOKEN = 'ghp_pat_11AADRNBY0CsP84p9FhoK1_HunYfpVI8cQpSuTPPest7t7Kp6593zgGFHB05ED2UWURN66CGS6KeP0HXAj';
+
 let selectedHour = null;
 
 class Doodle {
@@ -76,31 +78,41 @@ class Doodle {
         }
     }
 
-    handleVote(hour) {
+    async handleVote(hour) {
         selectedHour = hour;
-        this.showForm();
-    }
+        const button = event.target;
+        button.classList.add('disabled');
 
-    showForm() {
-        const formHTML = `
-            <div class="form-container">
-                <h3>Submit your vote</h3>
-                <p>Selected hour: <strong>${selectedHour}</strong></p>
-                <form action="https://formsubmit.co/mircea.lungu@gmail.com" method="POST" id="vote-form">
-                    <input type="hidden" name="_subject" value="New vote for meeting time">
-                    <input type="hidden" name="_next" value="https://mircealungu.github.io/doodle-vote/">
-                    <input type="hidden" name="hour" value="${selectedHour}">
-                    <p>
-                        <label>Your name:<br>
-                            <input type="text" name="name" required>
-                        </label>
-                    </p>
-                    <button type="submit">Submit Vote</button>
-                </form>
-            </div>
-        `;
-        const formContainer = document.getElementById('statuses');
-        formContainer.innerHTML = formHTML;
+        try {
+            const response = await fetch('https://api.github.com/repos/mircealungu/doodle-vote/discussions', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: `Vote: ${selectedHour}`,
+                    body: `Vote for ${selectedHour}`,
+                    category_id: null
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to create discussion');
+            }
+
+            await this.loadVotes();
+            button.classList.remove('disabled');
+            alert(`Vote for ${selectedHour} recorded!`);
+        } catch (error) {
+            console.error('Error submitting vote:', error);
+            const statuses = document.getElementById('statuses');
+            statuses.innerHTML = `<div class="error">Error submitting vote: ${error.message}</div>`;
+            alert(`Failed to submit vote: ${error.message}`);
+            button.classList.remove('disabled');
+        }
     }
 }
 
