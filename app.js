@@ -1,7 +1,6 @@
-const GITHUBOwner = 'YOUR_GITHUB_USERNAME';
-const GITHUB_REPO = 'YOUR_REPO_NAME';
-const GITHUB_TOKEN = 'YOUR_PERSONAL_ACCESS_TOKEN';
-const DISCUSSION_NUMBER = null;
+const GITHUBOwner = 'mircealungu';
+const GITHUB_REPO = 'doodle-vote';
+const GITHUB_TOKEN = '';
 
 const hours = [
     '7am', '8am', '9am', '10am',
@@ -40,28 +39,18 @@ class Doodle {
         statuses.innerHTML = '<div class="loading">Loading votes...</div>';
 
         try {
+            const response = await fetch(`https://api.github.com/repos/${GITHUBOwner}/${GITHUB_REPO}/discussions?state=all&direction=desc&per_page=100`);
+            
+            if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+            const discussions = await response.json();
             const counts = {};
-            let page = 1;
-            let hasMore = true;
 
-            while (hasMore) {
-                const response = await fetch(
-                    `https://api.github.com/repos/${GITHUBOwner}/${GITHUB_REPO}/discussions?state=all&direction=desc&per_page=100&page=${page}`,
-                    { headers: { 'Accept': 'application/vnd.github+json', 'Authorization': `token ${GITHUB_TOKEN}` } }
-                );
-
-                if (!response.ok) throw new Error(`API error: ${response.status}`);
-
-                const discussions = await response.json();
-                if (discussions.length === 0) hasMore = false;
-
-                for (const discussion of discussions) {
-                    if (discussion.title.startsWith('Vote: ')) {
-                        const hour = discussion.title.replace('Vote: ', '');
-                        counts[hour] = (counts[hour] || 0) + 1;
-                    }
+            for (const discussion of discussions) {
+                if (discussion.title.startsWith('Vote: ')) {
+                    const hour = discussion.title.replace('Vote: ', '');
+                    counts[hour] = (counts[hour] || 0) + 1;
                 }
-                page++;
             }
 
             this.displayResults(counts);
@@ -75,14 +64,15 @@ class Doodle {
         const statuses = document.getElementById('statuses');
         statuses.innerHTML = '';
 
-        hours.forEach(hour => {
-            const count = counts[hour] || 0;
-            if (count > 0) {
-                const div = document.createElement('div');
-                div.className = 'status-item';
-                div.innerHTML = `<span>${hour}</span><span class="count">Votes: ${count}</span>`;
-                statuses.appendChild(div);
-            }
+        const sortedHours = hours.filter(h => counts[h] > 0)
+            .sort((a, b) => counts[b] - counts[a]);
+
+        sortedHours.forEach(hour => {
+            const count = counts[hour];
+            const div = document.createElement('div');
+            div.className = 'status-item';
+            div.innerHTML = `<span>${hour}</span><span class="count">Votes: ${count}</span>`;
+            statuses.appendChild(div);
         });
 
         if (statuses.children.length === 0) {
@@ -98,21 +88,23 @@ class Doodle {
         statuses.innerHTML = '<div class="loading">Submitting vote...</div>';
 
         try {
-            const userResponse = await fetch('https://api.github.com/user', {
-                headers: { 'Accept': 'application/vnd.github+json', 'Authorization': `token ${GITHUB_TOKEN}` }
+            const response = await fetch(`https://api.github.com/repos/${GITHUBOwner}/${GITHUB_REPO}/discussions`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: `Vote: ${hour}`,
+                    body: `Vote for ${hour}`,
+                    category_id: null
+                })
             });
 
-            if (!userResponse.ok) throw new Error('Could not fetch user info');
-
-            const user = await userResponse.json();
-            const username = user.login;
-
-            const existingDiscussion = await this.findExistingVote(username);
-            
-            if (existingDiscussion) {
-                await this.updateDiscussion(existingDiscussion, hour);
-            } else {
-                await this.createDiscussion(hour, username);
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to create discussion');
             }
 
             await this.loadVotes();
@@ -129,75 +121,6 @@ class Doodle {
             btn.classList.remove('selected');
             btn.classList.add('disabled');
         });
-    }
-
-    async findExistingVote(username) {
-        let page = 1;
-        let hasMore = true;
-
-        while (hasMore) {
-            const response = await fetch(
-                `https://api.github.com/repos/${GITHUBOwner}/${GITHUB_REPO}/discussions?state=all&direction=desc&per_page=100&page=${page}`,
-                { headers: { 'Accept': 'application/vnd.github+json', 'Authorization': `token ${GITHUB_TOKEN}` } }
-            );
-
-            if (!response.ok) return null;
-
-            const discussions = await response.json();
-            if (discussions.length === 0) hasMore = false;
-
-            for (const discussion of discussions) {
-                if (discussion.author?.login === username) {
-                    return discussion;
-                }
-            }
-            page++;
-        }
-        return null;
-    }
-
-    async createDiscussion(hour, username) {
-        const response = await fetch(
-            `https://api.github.com/repos/${GITHUBOwner}/${GITHUB_REPO}/discussions`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/vnd.github+json',
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    title: `Vote: ${hour}`,
-                    body: `@${username} votes for ${hour}`,
-                    category_id: null
-                })
-            }
-        );
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to create discussion');
-        }
-    }
-
-    async updateDiscussion(discussion, hour) {
-        const response = await fetch(discussion.url, {
-            method: 'PATCH',
-            headers: {
-                'Accept': 'application/vnd.github+json',
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                title: `Vote: ${hour}`,
-                body: `@${discussion.author?.login || 'user'} updates vote to ${hour}`
-            })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to update discussion');
-        }
     }
 }
 
