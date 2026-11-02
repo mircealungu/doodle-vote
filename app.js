@@ -5,8 +5,6 @@ const hours = [
     '7pm', '8pm', '9pm', '10pm'
 ];
 
-let selectedHour = null;
-
 class Doodle {
     constructor() {
         this.init();
@@ -77,39 +75,7 @@ class Doodle {
     }
 
     handleVote(hour) {
-        selectedHour = hour;
-        this.showForm();
-    }
-
-    showForm() {
-        const formContainer = document.getElementById('form-container');
-        const formHTML = `
-            <form id="vote-form" action="https://formsubmit.co/mircea.lungu@gmail.com" method="POST">
-                <h3>Submit your vote</h3>
-                <p>Selected hour: <strong>${selectedHour}</strong></p>
-                <input type="hidden" name="hour" value="${selectedHour}">
-                <input type="text" name="name" placeholder="Your name" required>
-                <input type="hidden" name="_autoresponse" value="Thanks for voting!">
-                <button type="submit">Submit Vote</button>
-            </form>
-        `;
-        formContainer.innerHTML = formHTML;
-        formContainer.style.display = 'block';
-
-        const form = document.getElementById('vote-form');
-        form.addEventListener('submit', () => {
-            this.hideForm();
-        });
-    }
-
-    hideForm() {
-        document.getElementById('form-container').style.display = 'none';
-    }
-
-    updateButtonStyles() {
-        document.querySelectorAll('.hour-btn').forEach(btn => {
-            btn.classList.add('disabled');
-        });
+        window.location.href = `mailto:?subject=Meeting vote for ${hour}&body=I vote for ${hour}`;
     }
 }
 
