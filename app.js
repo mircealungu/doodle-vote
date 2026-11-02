@@ -5,7 +5,7 @@ const hours = [
     '7pm', '8pm', '9pm', '10pm'
 ];
 
-let selectedHour = null;
+const GITHUB_TOKEN = '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';
 
 class Doodle {
     constructor() {
@@ -85,7 +85,9 @@ class Doodle {
             const response = await fetch('https://api.github.com/repos/mircealungu/doodle-vote/discussions', {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/vnd.github+json'
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     title: `Vote: ${selectedHour}`,
