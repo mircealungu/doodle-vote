@@ -1,6 +1,6 @@
 const GITHUBOwner = 'mircealungu';
 const GITHUB_REPO = 'doodle-vote';
-const GITHUB_TOKEN = 'YOUR_TOKEN_HERE';
+const GITHUB_TOKEN = 'ghp_pat_11AADRNBY0CsP84p9FhoK1_HunYfpVI8cQpSuTPPest7t7Kp6593zgGFHB05ED2UWURN66CGS6KeP0HXAj';
 
 const hours = [
     '7am', '8am', '9am', '10am',
