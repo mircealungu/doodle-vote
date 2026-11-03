@@ -38,7 +38,7 @@ class Doodle {
                     <input type="hidden" name="_autoresponse" value="Thanks for voting!">
                     <input type="hidden" name="hour" value="${hour}">
                     <p>
-                        <label>Your name:<br>
+                        <label>Your name: <br>
                             <input type="text" name="name" required style="padding: 8px; margin-top: 10px;">
                         </label>
                     </p>
