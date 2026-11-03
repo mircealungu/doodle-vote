@@ -12,7 +12,6 @@ class Doodle {
 
     init() {
         this.renderHours();
-        this.loadVotes();
     }
 
     renderHours() {
@@ -23,47 +22,32 @@ class Doodle {
 
         grid.addEventListener('click', (e) => {
             if (e.target.classList.contains('hour-btn')) {
-                this.handleVote(e.target.dataset.hour);
+                this.showForm(e.target.dataset.hour);
             }
         });
     }
 
-    loadVotes() {
+    showForm(hour) {
+        const formHTML = `
+            <div class="form-container">
+                <h3>Submit your vote</h3>
+                <p>Selected hour: <strong>${hour}</strong></p>
+                <form action="https://formsubmit.co/mircea.lungu@gmail.com" method="POST" target="_blank">
+                    <input type="hidden" name="_subject" value="New vote for meeting time">
+                    <input type="hidden" name="_next" value="https://mircealungu.github.io/doodle-vote/">
+                    <input type="hidden" name="_autoresponse" value="Thanks for voting!">
+                    <input type="hidden" name="hour" value="${hour}">
+                    <p>
+                        <label>Your name:<br>
+                            <input type="text" name="name" required style="padding: 8px; margin-top: 10px;">
+                        </label>
+                    </p>
+                    <button type="submit" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Submit Vote</button>
+                </form>
+            </div>
+        `;
         const statuses = document.getElementById('statuses');
-        const votes = JSON.parse(localStorage.getItem('doodleVotes') || '{}');
-        this.displayResults(votes);
-    }
-
-    displayResults(votes) {
-        const statuses = document.getElementById('statuses');
-        statuses.innerHTML = '';
-
-        const sortedHours = hours.filter(h => votes[h])
-            .sort((a, b) => votes[b] - votes[a]);
-
-        sortedHours.forEach(hour => {
-            const count = votes[hour];
-            const div = document.createElement('div');
-            div.className = 'status-item';
-            div.innerHTML = `<span>${hour}</span><span class="count">Votes: ${count}</span>`;
-            statuses.appendChild(div);
-        });
-
-        if (statuses.children.length === 0) {
-            statuses.innerHTML = '<div class="loading">No votes yet. Be the first!</div>';
-        }
-    }
-
-    handleVote(hour) {
-        const votes = JSON.parse(localStorage.getItem('doodleVotes') || '{}');
-        votes[hour] = (votes[hour] || 0) + 1;
-        localStorage.setItem('doodleVotes', JSON.stringify(votes));
-        
-        const button = event.target;
-        button.classList.add('disabled');
-
-        this.displayResults(votes);
-        alert(`Vote for ${hour} recorded!`);
+        statuses.innerHTML = formHTML;
     }
 }
 
