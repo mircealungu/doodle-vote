@@ -60,14 +60,26 @@ class Doodle {
                 </form>
             </div>
         `;
-        const statuses = document.getElementById('statuses');
-        statuses.innerHTML = formHTML;
+        const container = document.querySelector('.container');
+        const formDiv = document.createElement('div');
+        formDiv.className = 'form-container';
+        formDiv.innerHTML = formHTML;
+        container.appendChild(formDiv);
+        
+        document.querySelector('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            formDiv.remove();
+        });
     }
 }
 
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('hour-btn')) {
-        const statusDiv = document.getElementById('statuses');
+        const container = document.querySelector('.container');
+        const existingForm = container.querySelector('.form-container');
+        if (existingForm) {
+            existingForm.remove();
+        }
         const formHTML = `
             <div class="form-container">
                 <h3>Submit your vote</h3>
@@ -87,7 +99,15 @@ document.addEventListener('click', (e) => {
                 </form>
             </div>
         `;
-        statusDiv.innerHTML = formHTML;
+        const formDiv = document.createElement('div');
+        formDiv.className = 'form-container';
+        formDiv.innerHTML = formHTML;
+        container.appendChild(formDiv);
+        
+        document.querySelector('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            formDiv.remove();
+        });
     }
 });
 
