@@ -87,8 +87,8 @@ class Doodle {
                     'Accept': 'application/vnd.github+json'
                 },
                 body: JSON.stringify({
-                    title: `Vote: ${selectedHour}`,
-                    body: `Vote for ${selectedHour}`
+                    title: `Vote: ${hour}`,
+                    body: `Vote for ${hour}`
                 })
             });
 
@@ -99,7 +99,7 @@ class Doodle {
 
             await this.loadVotes();
             button.classList.remove('disabled');
-            alert(`Vote for ${selectedHour} recorded!`);
+            alert(`Vote for ${hour} recorded!`);
         } catch (error) {
             console.error('Error submitting vote:', error);
             const statuses = document.getElementById('statuses');
