@@ -51,7 +51,16 @@ class Doodle {
         }
     }
 
-    showForm() {
+    submitVote() {
+        const name = document.querySelector('input[name="name"]').value;
+        const form = document.querySelector('form');
+        form.submit();
+    }
+}
+
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('hour-btn')) {
+        const statusDiv = document.getElementById('statuses');
         const formHTML = `
             <div class="form-container">
                 <h3>Submit your vote</h3>
@@ -76,9 +85,14 @@ class Doodle {
                 </form>
             </div>
         `;
-        const statuses = document.getElementById('statuses');
-        statuses.innerHTML = formHTML;
+        statusDiv.innerHTML = formHTML;
+        
+        const form = document.querySelector('form');
+        form.addEventListener('submit', (ev) => {
+            ev.preventDefault();
+            Doodle.prototype.submitVote();
+        });
     }
-}
+});
 
 new Doodle();
