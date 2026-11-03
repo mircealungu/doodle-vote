@@ -5,8 +5,6 @@ const hours = [
     '7pm', '8pm', '9pm', '10pm'
 ];
 
-const GITHUB_TOKEN = '';
-
 class Doodle {
     constructor() {
         this.init();
@@ -30,41 +28,21 @@ class Doodle {
         });
     }
 
-    async loadVotes() {
+    loadVotes() {
         const statuses = document.getElementById('statuses');
-        statuses.innerHTML = '<div class="loading">Loading votes...</div>';
-
-        try {
-            const response = await fetch('https://api.github.com/repos/mircealungu/doodle-vote/discussions?state=all&direction=desc&per_page=100');
-            
-            if (!response.ok) throw new Error(`API error: ${response.status}`);
-
-            const discussions = await response.json();
-            const counts = {};
-
-            for (const discussion of discussions) {
-                if (discussion.title.startsWith('Vote: ')) {
-                    const hour = discussion.title.replace('Vote: ', '');
-                    counts[hour] = (counts[hour] || 0) + 1;
-                }
-            }
-
-            this.displayResults(counts);
-        } catch (error) {
-            console.error('Error loading votes:', error);
-            statuses.innerHTML = `<div class="error">Error loading votes: ${error.message}</div>`;
-        }
+        const votes = JSON.parse(localStorage.getItem('doodleVotes') || '{}');
+        this.displayResults(votes);
     }
 
-    displayResults(counts) {
+    displayResults(votes) {
         const statuses = document.getElementById('statuses');
         statuses.innerHTML = '';
 
-        const sortedHours = hours.filter(h => counts[h] > 0)
-            .sort((a, b) => counts[b] - counts[a]);
+        const sortedHours = hours.filter(h => votes[h])
+            .sort((a, b) => votes[b] - votes[a]);
 
         sortedHours.forEach(hour => {
-            const count = counts[hour];
+            const count = votes[hour];
             const div = document.createElement('div');
             div.className = 'status-item';
             div.innerHTML = `<span>${hour}</span><span class="count">Votes: ${count}</span>`;
@@ -76,37 +54,16 @@ class Doodle {
         }
     }
 
-    async handleVote(hour) {
+    handleVote(hour) {
+        const votes = JSON.parse(localStorage.getItem('doodleVotes') || '{}');
+        votes[hour] = (votes[hour] || 0) + 1;
+        localStorage.setItem('doodleVotes', JSON.stringify(votes));
+        
         const button = event.target;
         button.classList.add('disabled');
 
-        try {
-            const response = await fetch('https://api.github.com/repos/mircealungu/doodle-vote/discussions', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/vnd.github+json'
-                },
-                body: JSON.stringify({
-                    title: `Vote: ${hour}`,
-                    body: `Vote for ${hour}`
-                })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to create discussion');
-            }
-
-            await this.loadVotes();
-            button.classList.remove('disabled');
-            alert(`Vote for ${hour} recorded!`);
-        } catch (error) {
-            console.error('Error submitting vote:', error);
-            const statuses = document.getElementById('statuses');
-            statuses.innerHTML = `<div class="error">Error submitting vote: ${error.message}</div>`;
-            alert(`Failed to submit vote: ${error.message}`);
-            button.classList.remove('disabled');
-        }
+        this.displayResults(votes);
+        alert(`Vote for ${hour} recorded!`);
     }
 }
 
