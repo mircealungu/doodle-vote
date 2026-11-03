@@ -6,7 +6,6 @@ const hours = [
 ];
 
 let selectedHours = [];
-let selectedDay = 'tomorrow';
 
 class Doodle {
     constructor() {
@@ -15,7 +14,6 @@ class Doodle {
 
     init() {
         this.renderHours();
-        this.loadVotes();
     }
 
     renderHours() {
@@ -40,21 +38,30 @@ class Doodle {
             selectedHours.push(hour);
         }
         this.renderHours();
-        localStorage.setItem('selectedHours', JSON.stringify(selectedHours));
     }
 
-    loadVotes() {
-        const saved = localStorage.getItem('selectedHours');
-        if (saved) {
-            selectedHours = JSON.parse(saved);
-            this.renderHours();
-        }
-    }
-
-    submitVote() {
-        const name = document.querySelector('input[name="name"]').value;
-        const form = document.querySelector('form');
-        form.submit();
+    showForm() {
+        const formHTML = `
+            <div class="form-container">
+                <h3>Submit your vote</h3>
+                <p>Selected hours: <strong>${selectedHours.join(', ')}</strong></p>
+                <form action="https://formsubmit.co/mircea.lungu@gmail.com" method="POST" target="_blank">
+                    <input type="hidden" name="_subject" value="New vote for meeting time">
+                    <input type="hidden" name="_next" value="https://mircealungu.github.io/doodle-vote/">
+                    <input type="hidden" name="_autoresponse" value="Thanks for voting!">
+                    <input type="hidden" name="hours" value="${selectedHours.join(', ')}">
+                    <input type="hidden" name="day" value="tomorrow">
+                    <p>
+                        <label>Your name: <br>
+                            <input type="text" name="name" required style="padding: 8px; margin-top: 10px;">
+                        </label>
+                    </p>
+                    <button type="submit" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Submit Vote</button>
+                </form>
+            </div>
+        `;
+        const statuses = document.getElementById('statuses');
+        statuses.innerHTML = formHTML;
     }
 }
 
@@ -64,34 +71,23 @@ document.addEventListener('click', (e) => {
         const formHTML = `
             <div class="form-container">
                 <h3>Submit your vote</h3>
-                <p>Selected hours: <strong>${selectedHours.length > 0 ? selectedHours.join(', ') : 'None'}</strong></p>
-                <p>Day: <strong>${selectedDay}</strong></p>
+                <p>Selected hours: <strong>${selectedHours.join(', ')}</strong></p>
                 <form action="https://formsubmit.co/mircea.lungu@gmail.com" method="POST" target="_blank">
                     <input type="hidden" name="_subject" value="New vote for meeting time">
                     <input type="hidden" name="_next" value="https://mircealungu.github.io/doodle-vote/">
                     <input type="hidden" name="_autoresponse" value="Thanks for voting!">
                     <input type="hidden" name="hours" value="${selectedHours.join(', ')}">
-                    <input type="hidden" name="day" value="${selectedDay}">
+                    <input type="hidden" name="day" value="tomorrow">
                     <p>
                         <label>Your name: <br>
                             <input type="text" name="name" required style="padding: 8px; margin-top: 10px;">
                         </label>
                     </p>
-                    <div style="margin-top: 15px;">
-                        <label><input type="radio" name="day" value="tomorrow" checked> Tomorrow</label>
-                        <label style="margin-left: 10px;"><input type="radio" name="day" value="Wednesday"> Wednesday</label>
-                    </div>
                     <button type="submit" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Submit Vote</button>
                 </form>
             </div>
         `;
         statusDiv.innerHTML = formHTML;
-        
-        const form = document.querySelector('form');
-        form.addEventListener('submit', (ev) => {
-            ev.preventDefault();
-            Doodle.prototype.submitVote();
-        });
     }
 });
 
