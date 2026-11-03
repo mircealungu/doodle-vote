@@ -5,6 +5,7 @@ const hours = [
     '7pm', '8pm', '9pm', '10pm'
 ];
 
+let selectedHours = [];
 let selectedDay = 'tomorrow';
 
 class Doodle {
@@ -14,32 +15,53 @@ class Doodle {
 
     init() {
         this.renderHours();
+        this.loadVotes();
     }
 
     renderHours() {
         const grid = document.getElementById('hours-grid');
-        grid.innerHTML = hours.map(hour => 
-            `<button class="hour-btn" data-hour="${hour}">${hour}</button>`
-        ).join('');
+        grid.innerHTML = hours.map(hour => {
+            const isSelected = selectedHours.includes(hour);
+            return `<button class="hour-btn ${isSelected ? 'selected' : ''}" data-hour="${hour}">${hour}</button>`;
+        }).join('');
 
         grid.addEventListener('click', (e) => {
             if (e.target.classList.contains('hour-btn')) {
-                this.showForm(e.target.dataset.hour);
+                this.toggleHour(e.target.dataset.hour);
             }
         });
     }
 
-    showForm(hour) {
+    toggleHour(hour) {
+        const index = selectedHours.indexOf(hour);
+        if (index > -1) {
+            selectedHours.splice(index, 1);
+        } else {
+            selectedHours.push(hour);
+        }
+        this.renderHours();
+        localStorage.setItem('selectedHours', JSON.stringify(selectedHours));
+    }
+
+    loadVotes() {
+        const saved = localStorage.getItem('selectedHours');
+        if (saved) {
+            selectedHours = JSON.parse(saved);
+            this.renderHours();
+        }
+    }
+
+    showForm() {
         const formHTML = `
             <div class="form-container">
                 <h3>Submit your vote</h3>
-                <p>Selected hour: <strong>${hour}</strong></p>
+                <p>Selected hours: <strong>${selectedHours.length > 0 ? selectedHours.join(', ') : 'None'}</strong></p>
                 <p>Day: <strong>${selectedDay}</strong></p>
                 <form action="https://formsubmit.co/mircea.lungu@gmail.com" method="POST" target="_blank">
                     <input type="hidden" name="_subject" value="New vote for meeting time">
                     <input type="hidden" name="_next" value="https://mircealungu.github.io/doodle-vote/">
                     <input type="hidden" name="_autoresponse" value="Thanks for voting!">
-                    <input type="hidden" name="hour" value="${hour}">
+                    <input type="hidden" name="hours" value="${selectedHours.join(', ')}">
                     <input type="hidden" name="day" value="${selectedDay}">
                     <p>
                         <label>Your name: <br>
